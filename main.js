@@ -1,39 +1,44 @@
-//Esercizio il compleanno dello Chef
-
 const getChefBirthday = async (id) => {
+  let recipe;
+
+  // 1. Recupero della ricetta
   try {
-    // 1. Recupero della ricetta
-    const res = await fetch(`https://dummyjson.com/recipes/${id}`);
+    const recipeResponse = await fetch(`https://dummyjson.com/recipes/${id}`);
 
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    }
-
-    const recipe = await res.json();
-
-    // 2. Recupero dell'identificativo dello chef
-    const userId = recipe.userId;
-
-    // 3. Recupero dei dati dello chef
-    const resChef = await fetch(`https://dummyjson.com/users/${userId}`);
-
-    if (!resChef.ok) {
-      throw new Error(`HTTP ${resChef.status}: ${resChef.statusText}`);
-    }
-
-    const chefData = await resChef.json();
-
-    // 4. Formattazione della data di nascita
-    return dayjs(chefData.birthDate).format("DD/MM/YYYY");
+    recipe = await recipeResponse.json();
   } catch (error) {
-    console.error("Errore durante il recupero dei dati:", error.message);
-
-    throw error;
+    console.error(error);
+    throw new Error(`Non recupero la ricetta id ${id}`);
   }
+
+  // 2. Controllo dell'errore restituito dall'API
+  if (recipe.message) {
+    throw new Error(recipe.message);
+  }
+
+  // 3. Recupero dei dati dello chef
+  let chef;
+  const userId = recipe.userId;
+
+  try {
+    const chefResponse = await fetch(`https://dummyjson.com/users/${userId}`);
+
+    chef = await chefResponse.json();
+  } catch (error) {
+    console.error(error);
+    throw new Error(`Non recupero lo chef id ${userId}`);
+  }
+
+  // 4. Controllo dell'errore restituito dall'API
+  if (chef.message) {
+    throw new Error(chef.message);
+  }
+
+  // 5. Restituzione della data formattata
+  return dayjs(chef.birthDate).format("DD/MM/YYYY");
 };
 
-// 5. Esecuzione della funzione
-
+// 6. Esecuzione della funzione
 (async () => {
   try {
     const birthday = await getChefBirthday(1);
